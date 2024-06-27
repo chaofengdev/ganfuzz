@@ -124,7 +124,7 @@ class GANTrainer(object):
         Returns:
           生成模型的损失、辨别模型的损失。
         """
-        noise = tf.random.normal([batch_size, noise_dim])
+        noise = tf.random.normal([batch_size, noise_dim])  # 高斯分布的随机向量。这里需要重构。
 
         with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
             # 调用生成模型生成样本数据

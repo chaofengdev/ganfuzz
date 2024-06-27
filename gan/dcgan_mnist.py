@@ -12,6 +12,7 @@ from IPython import display
 
 # 请注意，这里gan_trainer必须与模型训练器的文件名称一致
 import gan_trainer
+from . import gan_trainer
 
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
 
@@ -201,7 +202,7 @@ def main(epochs=10, buffer_size=10000, batch_size=128,
 
 # 入口函数，训练40轮次
 if __name__ == '__main__':
-    main(4)  # 受限于笔记本和时间成本，这里暂时跑4轮，查看效果。
+    main(20)  # 受限于笔记本和时间成本，这里暂时跑20轮，查看效果。
 
 # 训练轮次：30， buffer_size=10000, 批次大小：256
 # main(epochs=30, buffer_size=10000, batch_size=256)

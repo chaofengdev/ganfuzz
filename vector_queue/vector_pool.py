@@ -5,6 +5,16 @@ from mutation.mutation_strategy import sequential_injection
 
 
 def create_vector_queue(original_vector, num_variants=1000):
+    """
+    创建变异向量的队列。
+
+    参数:
+    - original_vector: 原始种子向量。
+    - num_variants: 变异向量的数量。
+
+    返回:
+    - vector_queue: 包含变异向量的队列。
+    """
     queue = [original_vector]
     for _ in range(num_variants):
         p = np.random.randint(1, len(original_vector) + 1)
@@ -16,6 +26,14 @@ def create_vector_queue(original_vector, num_variants=1000):
 
 
 def select_vectors_from_queue(vector_queue, num_selections=128, noise_dim=100):
+    """
+    从变异向量队列中随机选择一定数量的向量。
+    参数:
+    - vector_queue: 变异向量的队列。
+    - num_selections: 选择的向量数量。
+    返回:
+    - selected_vectors: 选择的向量，转换为Tensor。
+    """
     # 将 vector_queue 转换为 numpy 数组
     vector_queue_array = np.array(vector_queue)
 
@@ -32,6 +50,8 @@ def select_vectors_from_queue(vector_queue, num_selections=128, noise_dim=100):
     return selected_vectors_tensor
 
 
+# 向量池（种子队列），用来替代gan生成模型的输入张量，原尺寸为 noise = tf.random.normal([batch_size, noise_dim])
+# 将其封装为函数，并在使用gan生成器生成图片时调用。
 def get_noise(batch_size=128, noise_dim=100):
     original_vector = np.random.randn(noise_dim)
     vector_queue = create_vector_queue(original_vector, num_variants=128)

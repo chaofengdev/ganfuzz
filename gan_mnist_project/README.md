@@ -1,3 +1,5 @@
+```
+项目结构：
 gan_mnist_project/
 │
 ├── data/
@@ -17,3 +19,5 @@ gan_mnist_project/
 ├── main.py  (主程序入口)
 ├── requirements.txt  (依赖包)
 └── README.md  (项目说明)
+```
+

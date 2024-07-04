@@ -95,7 +95,7 @@ for iteration in range(500):
         print(f"Iteration: {iteration}, Average Confidence: {average_confidence}")
 
     if average_confidence < 0.1:
-        print("平均置信度低于0.2，停止迭代")
+        print("平均置信度低于0.1，停止迭代")
         break
 
 # 保存生成的图片

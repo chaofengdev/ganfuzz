@@ -8,10 +8,11 @@ gan_mnist_project/
 │
 ├── models/
 │   ├── gan.py  (GAN模型)
-│   ├── classifier.py  (分类模型)
+│   ├── classifier.py  (分类模型训练代码)
 │
 ├── mutation/
 │   ├── mutation_algorithms.py  (四种变异算法)
+│   ├── mutation_strategy.py  (论文中的变异算法)
 │
 ├── utils/
 │   ├── image_utils.py  (用于保存和显示图片)

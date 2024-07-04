@@ -12,7 +12,19 @@ from IPython import display
 
 # 请注意，这里gan_trainer必须与模型训练器的文件名称一致
 import gan_trainer
-from . import gan_trainer
+# from . import gan_trainer
+
+# 确保使用 GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+# 设置 GPU 内存增长  --这里都是为了缓解gpu显存不够的权宜之计。
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        print(e)
 
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
 
@@ -202,7 +214,7 @@ def main(epochs=10, buffer_size=10000, batch_size=128,
 
 # 入口函数，训练40轮次
 if __name__ == '__main__':
-    main(10)  # 受限于笔记本和时间成本，这里暂时跑20轮，查看效果。
+    main(30)  # 受限于笔记本和时间成本，这里暂时跑20轮，查看效果。
 
 # 训练轮次：30， buffer_size=10000, 批次大小：256
 # main(epochs=30, buffer_size=10000, batch_size=256)

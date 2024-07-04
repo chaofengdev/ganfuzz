@@ -153,3 +153,5 @@ cython_debug/
 
 /gan/logs
 /base_gan/logs
+/gan_mnist_project/models/logs/
+/gan_mnist_project/save/

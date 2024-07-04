@@ -202,7 +202,7 @@ def main(epochs=10, buffer_size=10000, batch_size=128,
 
 # 入口函数，训练40轮次
 if __name__ == '__main__':
-    main(20)  # 受限于笔记本和时间成本，这里暂时跑20轮，查看效果。
+    main(10)  # 受限于笔记本和时间成本，这里暂时跑20轮，查看效果。
 
 # 训练轮次：30， buffer_size=10000, 批次大小：256
 # main(epochs=30, buffer_size=10000, batch_size=256)

@@ -39,7 +39,11 @@ def main():
 
     # 创建种子向量队列
     seed_queue = [tf.random.normal([100]) for _ in range(20)]
-    average_confidence = 0
+    # average_confidence = 0
+    average_confidence = np.mean(
+        [np.max(classifier.predict(generator(np.expand_dims(vec, axis=0), training=False))) for vec in
+         seed_queue])
+    print(f"初始时，平均置信度：{average_confidence}")
     print("种子向量队列创建完毕")
 
     # 主循环

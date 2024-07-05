@@ -38,8 +38,8 @@ def main():
         print("未找到任何GAN模型检查点文件")
 
     # 创建种子向量队列
-    seed_queue = [tf.random.normal([100]) for _ in range(20)]  # 这里刚开始应该是空列表，还是包括随机向量的列表？
-    average_confidence = 0.5
+    seed_queue = [tf.random.normal([100]) for _ in range(20)]
+    average_confidence = 0
     print("种子向量队列创建完毕")
 
     # 主循环
@@ -73,8 +73,8 @@ def main():
 
         # 更新种子队列
         if confidence < average_confidence:
-            seed_queue.append(mutated_vector)  # 疑问：这里应该增加的是原向量还是变异后的向量？
-            seed_queue.pop(0)
+            seed_queue.append(mutated_vector)
+            # seed_queue.pop(0)  # 这里不用pop
             average_confidence = np.mean(
                 [np.max(classifier.predict(generator(np.expand_dims(vec, axis=0), training=False))) for vec in
                  seed_queue])

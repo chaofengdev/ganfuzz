@@ -12,12 +12,11 @@ from IPython import display
 
 # 请注意，这里gan_trainer必须与模型训练器的文件名称一致
 import gan_trainer
-# from . import gan_trainer
 
 # 确保使用 GPU
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-# 设置 GPU 内存增长  --这里都是为了缓解gpu显存不够的权宜之计。
+# 设置 GPU 内存增长
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
     try:
@@ -27,7 +26,6 @@ if gpus:
         print(e)
 
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
-
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
@@ -47,8 +45,8 @@ def create_generator_model():
         # 第一个全连接层，从随机噪声连接到12544（=7×7×256）个神经元
         tf.keras.layers.Dense(
             7*7*256, use_bias=False,
-            input_shape=(100,),
-            kernel_initializer=initializer),
+            input_shape=(100,),  # 输入张量的形状。
+            kernel_initializer=initializer),  # 初始化权重。
         # 批量正则化
         tf.keras.layers.BatchNormalization(),
         # 采用alpha=0.2的带泄露的ReLU激活函数
@@ -95,12 +93,15 @@ def create_discriminator_model():
     # 采用顺序模型构建辨别模型
     model = tf.keras.Sequential([
 
+        # 输入层，指定输入形状为28×28×1 --这里可以省略，因为不是整个模型的第一层。
+        tf.keras.layers.InputLayer(input_shape=(28, 28, 1)),
+
         # 第一个卷积层，输入28×28×1，输出14×14×64
         tf.keras.layers.Conv2D(
             64, 5, strides=(2, 2), padding='same',
-            kernel_initializer=initializer),
+            kernel_initializer=initializer),  # 权重初始化。
         tf.keras.layers.LeakyReLU(0.2),
-        tf.keras.layers.Dropout(0.3),
+        tf.keras.layers.Dropout(0.3),  # 随机丢弃30%的神经元，用于防止过拟合。
 
         # 第二个卷积层，输入14×14×64，输出7×7×128
         tf.keras.layers.Conv2D(
@@ -214,7 +215,7 @@ def main(epochs=10, buffer_size=10000, batch_size=128,
 
 # 入口函数，训练40轮次
 if __name__ == '__main__':
-    main(30)  # 受限于笔记本和时间成本，这里暂时跑20轮，查看效果。
+    main(40)
 
 # 训练轮次：30， buffer_size=10000, 批次大小：256
 # main(epochs=30, buffer_size=10000, batch_size=256)

@@ -36,7 +36,7 @@ def create_mnist_classifier():
 
 
 # 定义测试方法
-def test_model(model, test_images, test_labels):
+def test_model(model, test_images, test_labels, save_dir='classifier_model_test_output'):
     # 随机挑选10张图片
     indices = np.random.choice(len(test_images), 10)
     sample_images = test_images[indices]
@@ -46,15 +46,20 @@ def test_model(model, test_images, test_labels):
     predictions = model.predict(sample_images)
     predicted_labels = np.argmax(predictions, axis=1)
 
-    # 可视化展示
-    plt.figure(figsize=(10, 10))
-    for i in range(10):
-        plt.subplot(5, 2, i + 1)
-        plt.xticks([])
-        plt.yticks([])
-        plt.grid(False)
-        plt.imshow(sample_images[i].reshape(28, 28), cmap=plt.cm.binary)
-        plt.xlabel(f'Predicted: {predicted_labels[i]}, True: {sample_labels[i]}')
+    # 确保保存图片的目录存在
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    # 创建一个大图，并将每个小图嵌入其中
+    fig, axes = plt.subplots(5, 2, figsize=(10, 15))
+    for i, ax in enumerate(axes.flat):
+        ax.imshow(sample_images[i].reshape(28, 28), cmap=plt.cm.binary)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_xlabel(f'Predicted: {predicted_labels[i]}, True: {sample_labels[i]}')
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(save_dir, 'combined_image.png'))
     plt.show()
 
     # 计算预测的准确率
@@ -79,9 +84,6 @@ if __name__ == '__main__':
     test_loss, test_accuracy = mnist_classifier.evaluate(test_images, test_labels)
     print(f'在测试集上的准确率: {test_accuracy:.4f}')
 
-    # # 保存模型为HDF5格式
-    # mnist_classifier.save('mnist_classifier.h5')
-
     # 确保保存模型的目录存在
     save_dir = 'classifier_model'
     if not os.path.exists(save_dir):
@@ -91,5 +93,5 @@ if __name__ == '__main__':
     save_path = os.path.join(save_dir, 'mnist_classifier.h5')
     mnist_classifier.save(save_path)
 
-    # 测试模型
+    # 测试模型并保存图片
     test_model(mnist_classifier, test_images, test_labels)

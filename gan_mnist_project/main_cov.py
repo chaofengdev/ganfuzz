@@ -9,7 +9,40 @@ from models.gan import make_generator_model
 from mutation.mutation_algorithms import gaussian_mutation
 
 
-def main():
+def calculate_confidence(classifier, generator, image):
+    """
+    计算生成图片的分类器置信度。
+
+    Args:
+        classifier (tf.keras.Model): 分类器模型。
+        generator (tf.keras.Model): 生成器模型。
+        image (tf.Tensor): 生成的图片张量。
+
+    Returns:
+        float: 分类器预测的最大置信度。
+    """
+    prediction = classifier.predict(image)
+    return np.max(prediction)
+
+
+def calculate_coverage(generator, input_vector):
+    """
+    计算生成器模型生成图片的神经元覆盖率。
+
+    Args:
+        generator (tf.keras.Model): 生成器模型。
+        input_vector (np.ndarray): 输入向量，用于生成图片。
+
+    Returns:
+        float: 生成图片在生成器模型中激活的神经元比例。
+    """
+    generated_image = generator(np.expand_dims(input_vector, axis=0), training=False)
+    activations = generated_image.numpy() > 0.0
+    covered_neurons = np.mean(activations)
+    return covered_neurons
+
+
+def main(use_coverage=True):
     # 确保使用 GPU
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
@@ -22,14 +55,14 @@ def main():
         except RuntimeError as e:
             print(e)
 
-    # 加载已有的MNIST分类器 注意，这里加载模型必须使用低于3.0.0的h5py，否则会报错。原因是新版h5py会调用一个在Python 3中已弃用的.decode()方法。
+    # 加载已有的MNIST分类器
     classifier_path = 'models/classifier_model/mnist_classifier.h5'
     classifier = tf.keras.models.load_model(classifier_path)
     print("分类器加载完毕")
 
     # 加载最新的GAN模型
     generator = make_generator_model()
-    latest_checkpoint = tf.train.latest_checkpoint('models/logs/dcgan/model/')  # 不要硬编码，直接加载最新的检查点即可。
+    latest_checkpoint = tf.train.latest_checkpoint('models/logs/dcgan/model/')
     if latest_checkpoint:
         checkpoint = tf.train.Checkpoint(generator=generator)
         checkpoint.restore(latest_checkpoint).expect_partial()
@@ -39,11 +72,15 @@ def main():
 
     # 创建种子向量队列
     seed_queue = [tf.random.normal([100]) for _ in range(20)]
-    # average_confidence = 0
-    average_confidence = np.mean(
-        [np.max(classifier.predict(generator(np.expand_dims(vec, axis=0), training=False))) for vec in
-         seed_queue])
-    print(f"初始时，平均置信度：{average_confidence}")
+
+    # 初始化平均置信度或覆盖率
+    if use_coverage:
+        average_metric = np.mean([calculate_coverage(generator, vec) for vec in seed_queue])
+    else:
+        average_metric = np.mean(
+            [calculate_confidence(classifier, generator, np.expand_dims(vec, axis=0)) for vec in seed_queue])
+
+    print(f"初始时，平均{'覆盖率' if use_coverage else '置信度'}：{average_metric}")
     print("种子向量队列创建完毕")
 
     # 主循环
@@ -52,7 +89,7 @@ def main():
         # 随机选择一个向量并进行变异
         seed_vector = random.choice(seed_queue)
         print(f"选中的种子向量: {seed_vector}")
-        # mutated_vector = gaussian_mutation(seed_vector)
+
         # 随机选择一种变异策略
         strategy = random.choice(['sequential', 'random', 'perturbation'])
         if strategy == 'sequential':
@@ -69,26 +106,26 @@ def main():
         generated_image = generator(np.expand_dims(mutated_vector, axis=0), training=False)
         print(f"生成的图片 shape: {generated_image.shape}")
 
-        # 分类图片 将图片送进分类器中预测标签，同时给出置信度
-        prediction = classifier.predict(generated_image)
-        predicted_label = np.argmax(prediction)
-        confidence = np.max(prediction)
-        print(f"预测标签: {predicted_label}, 置信度: {confidence}")
+        # 计算当前迭代的指标（覆盖率或置信度）
+        if use_coverage:
+            metric = calculate_coverage(generator, mutated_vector)
+        else:
+            metric = calculate_confidence(classifier, generator, generated_image)
+
+        print(f"当前{'覆盖率' if use_coverage else '置信度'}: {metric}")
 
         # 更新种子队列
-        if confidence < average_confidence:
+        if metric < average_metric:
             seed_queue.append(mutated_vector)
-            # seed_queue.pop(0)  # 这里不用pop
-            average_confidence = np.mean(
-                [np.max(classifier.predict(generator(np.expand_dims(vec, axis=0), training=False))) for vec in
-                 seed_queue])
-            print(f"更新后的平均置信度: {average_confidence}")
+            average_metric = np.mean([calculate_coverage(generator, vec) if use_coverage else calculate_confidence(
+                classifier, generator, np.expand_dims(vec, axis=0)) for vec in seed_queue])
+            print(f"更新后的平均{'覆盖率' if use_coverage else '置信度'}: {average_metric}")
 
         if iteration % 100 == 0:
-            print(f"Iteration: {iteration}, Average Confidence: {average_confidence}")
+            print(f"Iteration: {iteration}, Average {'Coverage' if use_coverage else 'Confidence'}: {average_metric}")
 
-        if average_confidence < 0.2:
-            print("平均置信度低于0.2，停止迭代")
+        if average_metric < 0.2:
+            print("平均{'覆盖率' if use_coverage else '置信度'}低于0.2，停止迭代")
             break
 
     # 保存生成的图片 将队列中最后20个向量，输入到gan中得到图片。
@@ -108,4 +145,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # 在此切换使用覆盖率或置信度计算
+    main(use_coverage=True)
+    # main(use_coverage=False)
